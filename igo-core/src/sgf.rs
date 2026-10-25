@@ -56,6 +56,19 @@ pub fn to_sgf(game: &Game) -> String {
         out.push_str(&format!("RE[{}]", result_to_sgf(result)));
     }
 
+    let [black, white] = game.setup();
+    if white.is_empty() && black.len() >= 2 {
+        out.push_str(&format!("HA[{}]", black.len()));
+    }
+    for (ident, stones) in [("AB", black), ("AW", white)] {
+        if !stones.is_empty() {
+            out.push_str(ident);
+            for &v in stones {
+                out.push_str(&format!("[{}]", vertex_to_sgf(board, v)));
+            }
+        }
+    }
+
     for applied in game.history() {
         let color = match applied.color {
             Color::Black => 'B',

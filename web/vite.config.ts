@@ -1,15 +1,25 @@
-import { svelte } from '@sveltejs/vite-plugin-svelte'
-import { defineConfig } from 'vite'
+import tailwindcss from '@tailwindcss/vite';
+import adapter from '@sveltejs/adapter-static';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [svelte()],
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:3030',
-        changeOrigin: true,
-        ws: true
-      }
-    }
-  }
-})
+	plugins: [
+		tailwindcss(),
+		sveltekit({
+			compilerOptions: {
+				// Force runes mode for the project, except for libraries. Can be removed in svelte 6.
+				runes: ({ filename }) =>
+					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
+			},
+
+			// A single-page app: the igo server serves `build/` and falls back to index.html.
+			adapter: adapter({ fallback: 'index.html' })
+		})
+	],
+	server: {
+		proxy: {
+			'/api': { target: 'http://127.0.0.1:3030', changeOrigin: true, ws: true }
+		}
+	}
+});

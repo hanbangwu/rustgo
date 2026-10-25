@@ -6,10 +6,11 @@ COPY igo-core igo-core
 COPY igo-server igo-server
 RUN cargo test --release --workspace
 RUN cargo build --release -p igo-server
+RUN mkdir /data
 
 FROM oven/bun AS frontend
 WORKDIR /src
-COPY web/package.json web/bun.lock ./
+COPY web/package.json web/bun.lock web/.npmrc ./
 RUN bun prune --production
 RUN bun install --frozen-lockfile
 COPY web .
@@ -18,8 +19,11 @@ RUN bun run build
 
 FROM scratch
 COPY --from=backend /src/target/release/igo-server /igo-server
-COPY --from=frontend /src/dist /web/dist
-ENV STATIC_DIR=/web/dist
+COPY --from=frontend /src/build /web/build
+COPY --from=backend --chown=1000:1000 /data /data
+ENV STATIC_DIR=/web/build
+ENV DATABASE=/data/igo.db
+VOLUME /data
 EXPOSE 3030
 USER 1000:1000
 CMD ["/igo-server"]

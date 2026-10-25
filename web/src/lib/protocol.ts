@@ -1,94 +1,99 @@
-export type Color = 'black' | 'white'
+export type Color = 'black' | 'white';
 
-export type Move = { type: 'play'; vertex: number } | { type: 'pass' } | { type: 'resign' }
+export type Move = { type: 'play'; vertex: number } | { type: 'pass' } | { type: 'resign' };
 
 export type Score = {
-  black_stones: number
-  black_territory: number
-  white_stones: number
-  white_territory: number
-  dame: number
-  komi: number
-}
+	black_stones: number;
+	black_territory: number;
+	white_stones: number;
+	white_territory: number;
+	dame: number;
+	komi: number;
+};
 
 export type GameResult =
-  { kind: 'counted'; winner: Color | null; score: Score } | { kind: 'resignation'; winner: Color }
+	{ kind: 'counted'; winner: Color | null; score: Score } | { kind: 'resignation'; winner: Color };
 
 export type Phase =
-  { state: 'playing' } | { state: 'scoring' } | { state: 'finished'; result: GameResult }
+	{ state: 'playing' } | { state: 'scoring' } | { state: 'finished'; result: GameResult };
 
 export type Applied = {
-  move_number: number
-  color: Color
-  move: Move
-  captured: number[]
-}
+	move_number: number;
+	color: Color;
+	move: Move;
+	captured: number[];
+};
 
-export type Seats = { black: string | null; white: string | null }
+export type Seats = { black: string | null; white: string | null };
+
+export type Settings = { size: number; komi: number; handicap: number };
+
+export type Room = { id: string } & Settings;
 
 export type Snapshot = {
-  size: number
-  komi: number
-  board: number[]
-  to_play: Color
-  move_number: number
-  captures: [number, number]
-  phase: Phase
-  seats: Seats
-  dead: number[]
-  accepted: Color[]
-  you: Color | null
-  connections: number
-}
+	size: number;
+	komi: number;
+	handicap: number;
+	board: number[];
+	to_play: Color;
+	move_number: number;
+	captures: [number, number];
+	phase: Phase;
+	seats: Seats;
+	dead: number[];
+	accepted: Color[];
+	you: Color | null;
+	connections: number;
+};
 
 export type ServerMsg =
-  | { type: 'identity'; conn: number; you: Color | null }
-  | ({ type: 'snapshot' } & Snapshot)
-  | {
-      type: 'history'
-      start: number
-      moves: Applied[]
-      to_play: Color
-      captures: [number, number]
-      phase: Phase
-    }
-  | { type: 'seats'; seats: Seats }
-  | {
-      type: 'dead'
-      vertices: number[]
-      accepted: Color[]
-      score: Score
-      territory: number[]
-    }
-  | { type: 'phase_changed'; phase: Phase }
-  | { type: 'presence'; connections: number }
-  | { type: 'rejected'; reason: string }
+	| { type: 'identity'; conn: number; you: Color | null }
+	| ({ type: 'snapshot' } & Snapshot)
+	| {
+			type: 'moved';
+			applied: Applied;
+			to_play: Color;
+			captures: [number, number];
+			phase: Phase;
+	  }
+	| { type: 'seats'; seats: Seats }
+	| {
+			type: 'dead';
+			vertices: number[];
+			accepted: Color[];
+			score: Score;
+			territory: number[];
+	  }
+	| { type: 'phase_changed'; phase: Phase }
+	| { type: 'presence'; connections: number }
+	| { type: 'rejected'; reason: string };
 
 export type ClientMsg =
-  | { type: 'hello'; token: string; name: string }
-  | { type: 'claim_seat'; color: Color }
-  | { type: 'release_seat' }
-  | { type: 'play'; move_number: number; move: Move }
-  | { type: 'toggle_dead'; vertex: number }
-  | { type: 'accept_score' }
-  | { type: 'resume_play' }
+	| { type: 'hello'; token: string; name: string }
+	| { type: 'claim_seat'; color: Color }
+	| { type: 'release_seat' }
+	| { type: 'play'; move_number: number; move: Move }
+	| { type: 'toggle_dead'; vertex: number }
+	| { type: 'accept_score' }
+	| { type: 'resume_play' }
+	| { type: 'heartbeat' };
 
 export function blackTotal(score: Score): number {
-  return score.black_stones + score.black_territory
+	return score.black_stones + score.black_territory;
 }
 
 export function whiteTotal(score: Score): number {
-  return score.white_stones + score.white_territory + score.komi
+	return score.white_stones + score.white_territory + score.komi;
 }
 
 export function describeResult(result: GameResult): string {
-  if (result.kind === 'resignation') {
-    return `${result.winner === 'black' ? 'Black' : 'White'} wins by resignation`
-  }
-  if (result.winner === null) {
-    return 'Draw'
-  }
-  const margin = Math.abs(blackTotal(result.score) - whiteTotal(result.score))
-  const name = result.winner === 'black' ? 'Black' : 'White'
-  return `${name} wins by ${margin}`
+	if (result.kind === 'resignation') {
+		return `${result.winner === 'black' ? 'Black' : 'White'} wins by resignation`;
+	}
+	if (result.winner === null) {
+		return 'Draw';
+	}
+	const margin = Math.abs(blackTotal(result.score) - whiteTotal(result.score));
+	const name = result.winner === 'black' ? 'Black' : 'White';
+	return `${name} wins by ${margin}`;
 }

@@ -11,21 +11,11 @@ async fn seat_both(black: &mut Client, white: &mut Client) {
 }
 
 #[tokio::test]
-async fn a_room_is_created_by_the_first_visitor() {
-    let addr = spawn_default().await;
-    let mut client = Client::join(addr, "abc123", "tok-a", "Ada").await;
-
-    let mut other = Client::join(addr, "abc123", "tok-b", "Bo").await;
-    other.send(&claim("black")).await;
-
-    client.expect_seats(Some("Bo"), None).await;
-}
-
-#[tokio::test]
 async fn two_players_claim_opposite_seats_and_play() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "game1", "tok-b", "Black").await;
-    let mut white = Client::join(addr, "game1", "tok-w", "White").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut white = Client::join(addr, &room, "tok-w", "White").await;
     seat_both(&mut black, &mut white).await;
 
     black.send(&play(0, at(3, 3))).await;
@@ -43,8 +33,9 @@ async fn two_players_claim_opposite_seats_and_play() {
 #[tokio::test]
 async fn a_seat_cannot_be_taken_twice() {
     let addr = spawn_default().await;
-    let mut first = Client::join(addr, "game2", "tok-1", "First").await;
-    let mut second = Client::join(addr, "game2", "tok-2", "Second").await;
+    let room = new_room(addr).await;
+    let mut first = Client::join(addr, &room, "tok-1", "First").await;
+    let mut second = Client::join(addr, &room, "tok-2", "Second").await;
 
     first.send(&claim("black")).await;
     first.expect_seats(Some("First"), None).await;
@@ -60,11 +51,12 @@ async fn a_seat_cannot_be_taken_twice() {
 #[tokio::test]
 async fn one_person_cannot_hold_both_seats() {
     let addr = spawn_default().await;
-    let mut client = Client::join(addr, "game3", "same-token", "Solo").await;
+    let room = new_room(addr).await;
+    let mut client = Client::join(addr, &room, "same-token", "Solo").await;
     client.send(&claim("black")).await;
     client.expect_seats(Some("Solo"), None).await;
 
-    let mut second_tab = Client::join(addr, "game3", "same-token", "Solo").await;
+    let mut second_tab = Client::join(addr, &room, "same-token", "Solo").await;
     second_tab.send(&claim("white")).await;
     let rejected = second_tab.expect("rejected").await;
     assert!(
@@ -79,9 +71,10 @@ async fn one_person_cannot_hold_both_seats() {
 #[tokio::test]
 async fn spectators_cannot_move() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "game4", "tok-b", "Black").await;
-    let mut white = Client::join(addr, "game4", "tok-w", "White").await;
-    let mut watcher = Client::join(addr, "game4", "tok-s", "Watcher").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut white = Client::join(addr, &room, "tok-w", "White").await;
+    let mut watcher = Client::join(addr, &room, "tok-s", "Watcher").await;
     seat_both(&mut black, &mut white).await;
     watcher.expect_seats(Some("Black"), Some("White")).await;
 
@@ -96,8 +89,9 @@ async fn spectators_cannot_move() {
 #[tokio::test]
 async fn moving_out_of_turn_is_refused() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "game5", "tok-b", "Black").await;
-    let mut white = Client::join(addr, "game5", "tok-w", "White").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut white = Client::join(addr, &room, "tok-w", "White").await;
     seat_both(&mut black, &mut white).await;
 
     white.send(&play(0, at(3, 3))).await;
@@ -114,8 +108,9 @@ async fn moving_out_of_turn_is_refused() {
 #[tokio::test]
 async fn a_stale_move_number_is_dropped() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "game6", "tok-b", "Black").await;
-    let mut white = Client::join(addr, "game6", "tok-w", "White").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut white = Client::join(addr, &room, "tok-w", "White").await;
     seat_both(&mut black, &mut white).await;
 
     black.send(&play(0, at(3, 3))).await;
@@ -134,8 +129,9 @@ async fn a_stale_move_number_is_dropped() {
 #[tokio::test]
 async fn an_illegal_move_is_refused_without_closing_the_socket() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "game7", "tok-b", "Black").await;
-    let mut white = Client::join(addr, "game7", "tok-w", "White").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut white = Client::join(addr, &room, "tok-w", "White").await;
     seat_both(&mut black, &mut white).await;
 
     black.send(&play(0, at(3, 3))).await;
@@ -156,8 +152,9 @@ async fn an_illegal_move_is_refused_without_closing_the_socket() {
 #[tokio::test]
 async fn captures_are_reported_so_a_client_needs_no_rules() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "cap", "tok-b", "Black").await;
-    let mut white = Client::join(addr, "cap", "tok-w", "White").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut white = Client::join(addr, &room, "tok-w", "White").await;
     seat_both(&mut black, &mut white).await;
 
     black.send(&play(0, at(0, 1))).await;
@@ -178,8 +175,9 @@ async fn captures_are_reported_so_a_client_needs_no_rules() {
 #[tokio::test]
 async fn ko_is_refused_by_the_server() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "ko", "tok-b", "Black").await;
-    let mut white = Client::join(addr, "ko", "tok-w", "White").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut white = Client::join(addr, &room, "tok-w", "White").await;
     seat_both(&mut black, &mut white).await;
 
     // build ko:
@@ -226,15 +224,16 @@ async fn ko_is_refused_by_the_server() {
 #[tokio::test]
 async fn reconnecting_with_the_same_token_restores_the_seat() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "resume", "tok-b", "Black").await;
-    let mut white = Client::join(addr, "resume", "tok-w", "White").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut white = Client::join(addr, &room, "tok-w", "White").await;
     seat_both(&mut black, &mut white).await;
 
     black.send(&play(0, at(3, 3))).await;
     black.expect_move(0).await;
 
     drop(black);
-    let mut reconnected = Client::connect(addr, "resume").await;
+    let mut reconnected = Client::connect(addr, &room).await;
     reconnected
         .send(&json!({ "type": "hello", "token": "tok-b", "name": "Black" }))
         .await;
@@ -257,12 +256,13 @@ async fn reconnecting_with_the_same_token_restores_the_seat() {
 #[tokio::test]
 async fn a_different_token_does_not_inherit_a_seat() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "steal", "tok-b", "Black").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
     black.send(&claim("black")).await;
     black.expect_seats(Some("Black"), None).await;
     drop(black);
 
-    let mut impostor = Client::join(addr, "steal", "tok-x", "Impostor").await;
+    let mut impostor = Client::join(addr, &room, "tok-x", "Impostor").await;
     impostor.send(&play(0, at(3, 3))).await;
     let rejected = impostor.expect("rejected").await;
     assert!(
@@ -274,8 +274,9 @@ async fn a_different_token_does_not_inherit_a_seat() {
 #[tokio::test]
 async fn two_passes_enter_scoring_and_agreement_ends_the_game() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "score", "tok-b", "Black").await;
-    let mut white = Client::join(addr, "score", "tok-w", "White").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut white = Client::join(addr, &room, "tok-w", "White").await;
     seat_both(&mut black, &mut white).await;
 
     black.send(&play(0, at(3, 3))).await;
@@ -312,8 +313,9 @@ async fn two_passes_enter_scoring_and_agreement_ends_the_game() {
 #[tokio::test]
 async fn marking_stones_dead_clears_previous_agreement() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "marks", "tok-b", "Black").await;
-    let mut white = Client::join(addr, "marks", "tok-w", "White").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut white = Client::join(addr, &room, "tok-w", "White").await;
     seat_both(&mut black, &mut white).await;
 
     black.send(&play(0, at(3, 3))).await;
@@ -344,8 +346,9 @@ async fn marking_stones_dead_clears_previous_agreement() {
 #[tokio::test]
 async fn players_can_resume_play_when_they_disagree() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "resume2", "tok-b", "Black").await;
-    let mut white = Client::join(addr, "resume2", "tok-w", "White").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut white = Client::join(addr, &room, "tok-w", "White").await;
     seat_both(&mut black, &mut white).await;
 
     black.send(&pass(0)).await;
@@ -366,9 +369,10 @@ async fn players_can_resume_play_when_they_disagree() {
 #[tokio::test]
 async fn a_spectator_cannot_mark_stones() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "watch", "tok-b", "Black").await;
-    let mut white = Client::join(addr, "watch", "tok-w", "White").await;
-    let mut watcher = Client::join(addr, "watch", "tok-s", "Watcher").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut white = Client::join(addr, &room, "tok-w", "White").await;
+    let mut watcher = Client::join(addr, &room, "tok-s", "Watcher").await;
     seat_both(&mut black, &mut white).await;
     watcher.expect_seats(Some("Black"), Some("White")).await;
 
@@ -395,8 +399,9 @@ async fn a_spectator_cannot_mark_stones() {
 #[tokio::test]
 async fn resignation_ends_the_game_immediately() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "resign", "tok-b", "Black").await;
-    let mut white = Client::join(addr, "resign", "tok-w", "White").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut white = Client::join(addr, &room, "tok-w", "White").await;
     seat_both(&mut black, &mut white).await;
 
     black
@@ -416,8 +421,9 @@ async fn resignation_ends_the_game_immediately() {
 #[tokio::test]
 async fn a_seat_can_be_released_only_before_the_first_move() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "release", "tok-b", "Black").await;
-    let mut white = Client::join(addr, "release", "tok-w", "White").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut white = Client::join(addr, &room, "tok-w", "White").await;
 
     black.send(&claim("black")).await;
     black.expect_seats(Some("Black"), None).await;
@@ -442,7 +448,8 @@ async fn a_seat_can_be_released_only_before_the_first_move() {
 #[tokio::test]
 async fn an_unrecognised_message_closes_the_connection() {
     let addr = spawn_default().await;
-    let mut client = Client::join(addr, "bad", "tok-b", "Black").await;
+    let room = new_room(addr).await;
+    let mut client = Client::join(addr, &room, "tok-b", "Black").await;
     client.send(&json!({ "type": "no_such_message" })).await;
     client.expect_closed().await;
 }
@@ -450,7 +457,8 @@ async fn an_unrecognised_message_closes_the_connection() {
 #[tokio::test]
 async fn a_connection_must_identify_itself_first() {
     let addr = spawn_default().await;
-    let mut client = Client::connect(addr, "nohello").await;
+    let room = new_room(addr).await;
+    let mut client = Client::connect(addr, &room).await;
     client.send(&claim("black")).await;
     client.expect_closed().await;
 }
@@ -458,8 +466,9 @@ async fn a_connection_must_identify_itself_first() {
 #[tokio::test]
 async fn sgf_is_downloadable_and_replays() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "sgfroom", "tok-b", "Black").await;
-    let mut white = Client::join(addr, "sgfroom", "tok-w", "White").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut white = Client::join(addr, &room, "tok-w", "White").await;
     seat_both(&mut black, &mut white).await;
 
     black.send(&play(0, at(3, 15))).await;
@@ -467,7 +476,7 @@ async fn sgf_is_downloadable_and_replays() {
     white.send(&play(1, at(15, 3))).await;
     black.expect_move(1).await;
 
-    let body = http_body(&format!("http://{addr}/api/sgf/sgfroom")).await;
+    let body = http_body(&format!("http://{addr}/api/sgf/{room}")).await;
     assert!(body.contains(";B[pd];W[dp]"), "{body}");
 
     let record = igo_core::sgf::parse(&body).expect("our own export parses");
@@ -479,10 +488,22 @@ async fn sgf_is_downloadable_and_replays() {
 #[tokio::test]
 async fn unknown_rooms_and_bad_ids_are_rejected() {
     let addr = spawn_default().await;
-    assert_eq!(
-        http_status(&format!("http://{addr}/api/sgf/never-played")).await,
-        404
+    let handshake =
+        tokio_tungstenite::connect_async(format!("ws://{addr}/api/socket/never-made")).await;
+    assert!(
+        matches!(
+            handshake,
+            Err(tokio_tungstenite::tungstenite::Error::Http(ref r)) if r.status() == 404
+        ),
+        "{handshake:?}"
     );
+    for path in ["sgf", "rooms"] {
+        assert_eq!(
+            http_status(&format!("http://{addr}/api/{path}/never-made")).await,
+            404,
+            "{path}"
+        );
+    }
     assert_eq!(
         http_status(&format!("http://{addr}/api/sgf/has%20spaces")).await,
         400
@@ -493,41 +514,105 @@ async fn unknown_rooms_and_bad_ids_are_rejected() {
     );
 }
 
-async fn http_get(url: &str) -> String {
-    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+#[tokio::test]
+async fn rooms_are_created_with_their_own_settings() {
+    let addr = spawn_default().await;
+    let url = format!("http://{addr}/api/rooms");
 
-    let rest = url.strip_prefix("http://").expect("http url");
-    let (authority, path) = rest.split_once('/').unwrap_or((rest, ""));
-    let mut stream = tokio::net::TcpStream::connect(authority).await.unwrap();
-    let request = format!("GET /{path} HTTP/1.1\r\nHost: {authority}\r\nConnection: close\r\n\r\n");
-    stream.write_all(request.as_bytes()).await.unwrap();
-    let mut response = String::new();
-    stream.read_to_string(&mut response).await.unwrap();
-    response
+    let (status, body) = http("POST", &url, Some(r#"{"size":9,"handicap":2}"#)).await;
+    assert_eq!(status, 201, "{body}");
+    let created: serde_json::Value = serde_json::from_str(&body).unwrap();
+    assert_eq!(created["size"], 9);
+    assert_eq!(
+        created["komi"], 0.5,
+        "handicap games default to half a point"
+    );
+    assert_eq!(created["handicap"], 2);
+
+    let id = created["id"].as_str().unwrap();
+    let (status, body) = http("GET", &format!("{url}/{id}"), None).await;
+    assert_eq!(status, 200);
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(&body).unwrap(),
+        created
+    );
+
+    let mut black = Client::join(addr, id, "tok-b", "Black").await;
+    let mut white = Client::join(addr, id, "tok-w", "White").await;
+    seat_both(&mut black, &mut white).await;
+
+    black.send(&play(0, 40)).await;
+    let rejected = black.expect("rejected").await;
+    assert!(
+        rejected["reason"]
+            .as_str()
+            .unwrap()
+            .contains("not your turn"),
+        "white moves first after a handicap: {rejected}"
+    );
+    white.send(&play(0, 40)).await;
+    assert_eq!(black.expect_move(0).await["color"], "white");
+
+    let sgf = http_body(&format!("http://{addr}/api/sgf/{id}")).await;
+    assert!(sgf.contains("SZ[9]KM[0.5]HA[2]AB["), "{sgf}");
 }
 
-async fn http_body(url: &str) -> String {
-    http_get(url)
-        .await
-        .split_once("\r\n\r\n")
-        .map(|(_, body)| body.to_string())
-        .unwrap_or_default()
+#[tokio::test]
+async fn bad_settings_are_refused() {
+    let addr = spawn_default().await;
+    let url = format!("http://{addr}/api/rooms");
+    for body in [
+        r#"{"size":15}"#,
+        r#"{"handicap":1}"#,
+        r#"{"handicap":10}"#,
+        r#"{"komi":6.3}"#,
+        r#"{"komi":1000}"#,
+    ] {
+        assert_eq!(http("POST", &url, Some(body)).await.0, 422, "{body}");
+    }
 }
 
-async fn http_status(url: &str) -> u16 {
-    http_get(url)
-        .await
-        .split_whitespace()
-        .nth(1)
-        .and_then(|code| code.parse().ok())
-        .unwrap_or(0)
+#[tokio::test]
+async fn scoring_marks_never_arrive_before_the_pass_that_started_scoring() {
+    let addr = spawn_default().await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut white = Client::join(addr, &room, "tok-w", "White").await;
+    seat_both(&mut black, &mut white).await;
+
+    for _ in 0..20 {
+        let n = black.move_count();
+        black.send(&pass(n)).await;
+        white.expect_move(n).await;
+        white.send(&pass(n + 1)).await;
+
+        // `recv` asserts moves arrive in order; here we check that the
+        // scoring overlay comes strictly after the second pass.
+        loop {
+            let msg = black.recv().await;
+            assert_ne!(msg["type"], "dead", "dead stones before the pass: {msg}");
+            if msg["type"] == "moved" && msg["applied"]["move_number"] == n + 1 {
+                break;
+            }
+        }
+        assert_eq!(black.phase()["state"], "scoring");
+        black.expect("dead").await;
+        white.expect("dead").await;
+
+        black.send(&json!({ "type": "resume_play" })).await;
+        for client in [&mut black, &mut white] {
+            client.expect("phase_changed").await;
+            client.expect("dead").await;
+        }
+    }
 }
 
 #[tokio::test]
 async fn claiming_a_seat_tells_that_connection_who_it_is() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "identity", "tok-b", "Black").await;
-    let mut white = Client::join(addr, "identity", "tok-w", "White").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut white = Client::join(addr, &room, "tok-w", "White").await;
 
     black.send(&claim("black")).await;
     let identity = black
@@ -550,8 +635,9 @@ async fn claiming_a_seat_tells_that_connection_who_it_is() {
 #[tokio::test]
 async fn another_tab_of_the_same_player_learns_its_seat() {
     let addr = spawn_default().await;
-    let mut first = Client::join(addr, "tabs", "tok-b", "Black").await;
-    let mut second = Client::join(addr, "tabs", "tok-b", "Black").await;
+    let room = new_room(addr).await;
+    let mut first = Client::join(addr, &room, "tok-b", "Black").await;
+    let mut second = Client::join(addr, &room, "tok-b", "Black").await;
 
     first.send(&claim("black")).await;
     second
@@ -562,7 +648,8 @@ async fn another_tab_of_the_same_player_learns_its_seat() {
 #[tokio::test]
 async fn a_second_hello_renames_the_player() {
     let addr = spawn_default().await;
-    let mut black = Client::join(addr, "rename", "tok-b", "Black").await;
+    let room = new_room(addr).await;
+    let mut black = Client::join(addr, &room, "tok-b", "Black").await;
     black.send(&claim("black")).await;
     black.expect_seats(Some("Black"), None).await;
 
@@ -587,7 +674,8 @@ async fn a_second_hello_renames_the_player() {
 #[tokio::test]
 async fn names_are_trimmed_and_defaulted() {
     let addr = spawn_default().await;
-    let mut client = Client::join(addr, "names", "tok-b", "   ").await;
+    let room = new_room(addr).await;
+    let mut client = Client::join(addr, &room, "tok-b", "   ").await;
     client.send(&claim("black")).await;
     client.expect_seats(Some("Anonymous"), None).await;
 

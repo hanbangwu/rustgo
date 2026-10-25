@@ -69,6 +69,7 @@ pub struct Game {
     consecutive_passes: u8,
     phase: Phase,
     komi: f32,
+    setup: [Vec<Vertex>; 2],
 }
 
 impl Game {
@@ -76,9 +77,31 @@ impl Game {
         Game::from_board(Board::new(size), Color::Black, komi)
     }
 
+    /// A game with `stones` handicap stones on the standard points, white to move.
+    pub fn with_handicap(size: u8, komi: f32, stones: u8) -> Option<Game> {
+        let mut board = Board::new(size);
+        let points = handicap_points(board.size(), stones)?;
+        for &v in &points {
+            board.set(v, Point::Stone(Color::Black));
+        }
+        let to_play = if points.is_empty() {
+            Color::Black
+        } else {
+            Color::White
+        };
+        Some(Game::from_board(board, to_play, komi))
+    }
+
     pub fn from_board(board: Board, to_play: Color, komi: f32) -> Game {
         let hash = zobrist::hash_board(&board);
+        let mut setup = [Vec::new(), Vec::new()];
+        for v in board.vertices() {
+            if let Point::Stone(c) = board.get(v) {
+                setup[c.index()].push(v);
+            }
+        }
         Game {
+            setup,
             board,
             to_play,
             history: Vec::new(),
@@ -105,6 +128,11 @@ impl Game {
 
     pub fn komi(&self) -> f32 {
         self.komi
+    }
+
+    /// Stones on the board before the first move, indexed by colour.
+    pub fn setup(&self) -> &[Vec<Vertex>; 2] {
+        &self.setup
     }
 
     pub fn history(&self) -> &[Applied] {
@@ -237,4 +265,40 @@ impl Game {
         self.consecutive_passes = 0;
         Ok(())
     }
+}
+
+/// The standard handicap points for `stones` stones, or `None` if that
+/// handicap cannot be placed on this board. Zero stones is an even game.
+pub fn handicap_points(size: u8, stones: u8) -> Option<Vec<Vertex>> {
+    if stones == 0 {
+        return Some(Vec::new());
+    }
+    if stones == 1 || stones > 9 || size < 7 || (stones > 4 && size.is_multiple_of(2)) {
+        return None;
+    }
+
+    let edge = if size < 13 { 2 } else { 3 };
+    let (near, mid, far) = (edge, size / 2, size - 1 - edge);
+    let at = |row: u8, col: u8| row as Vertex * size as Vertex + col as Vertex;
+
+    // Upper right and lower left first, as seen by black.
+    let mut points = vec![at(near, far), at(far, near)];
+    if stones >= 3 {
+        points.push(at(far, far));
+    }
+    if stones >= 4 {
+        points.push(at(near, near));
+    }
+    if stones >= 6 {
+        points.push(at(mid, near));
+        points.push(at(mid, far));
+    }
+    if stones >= 8 {
+        points.push(at(near, mid));
+        points.push(at(far, mid));
+    }
+    if stones % 2 == 1 && stones >= 5 {
+        points.push(at(mid, mid));
+    }
+    Some(points)
 }

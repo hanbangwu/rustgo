@@ -18,7 +18,9 @@ pub async fn spawn(config: ServerConfig) -> SocketAddr {
         .expect("bind ephemeral port");
     let addr = listener.local_addr().unwrap();
     tokio::spawn(async move {
-        axum::serve(listener, app(config)).await.unwrap();
+        axum::serve(listener, app(config).expect("app starts"))
+            .await
+            .unwrap();
     });
     addr
 }
@@ -99,12 +101,10 @@ impl Client {
                 self.to_play = msg["to_play"].clone();
                 self.captures = msg["captures"].clone();
             }
-            Some("history") => {
-                let start = msg["start"].as_u64().unwrap_or(0) as usize;
-                self.moves.resize(start, Value::Null);
-                for applied in msg["moves"].as_array().into_iter().flatten() {
-                    self.moves.push(applied.clone());
-                }
+            Some("moved") => {
+                let n = msg["applied"]["move_number"].as_u64().unwrap() as usize;
+                assert_eq!(n, self.moves.len(), "moves arrive in order: {msg}");
+                self.moves.push(msg["applied"].clone());
                 self.phase = msg["phase"].clone();
                 self.to_play = msg["to_play"].clone();
                 self.captures = msg["captures"].clone();
@@ -187,6 +187,57 @@ impl Client {
         }
         panic!("connection stayed open");
     }
+}
+
+/// Creates a room over HTTP and returns its id.
+pub async fn new_room(addr: SocketAddr) -> String {
+    let (status, body) = http("POST", &format!("http://{addr}/api/rooms"), Some("{}")).await;
+    assert_eq!(status, 201, "{body}");
+    let created: Value = serde_json::from_str(&body).expect("JSON body");
+    created["id"].as_str().expect("an id").to_string()
+}
+
+/// A bare-bones HTTP/1.1 request, returning the status and body.
+pub async fn http(method: &str, url: &str, json_body: Option<&str>) -> (u16, String) {
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+    let rest = url.strip_prefix("http://").expect("http url");
+    let (authority, path) = rest.split_once('/').unwrap_or((rest, ""));
+    let mut stream = TcpStream::connect(authority).await.unwrap();
+    let body = json_body.unwrap_or("");
+    let headers = if json_body.is_some() {
+        format!(
+            "Content-Type: application/json\r\nContent-Length: {}\r\n",
+            body.len()
+        )
+    } else {
+        String::new()
+    };
+    let request = format!(
+        "{method} /{path} HTTP/1.1\r\nHost: {authority}\r\n{headers}Connection: close\r\n\r\n{body}"
+    );
+    stream.write_all(request.as_bytes()).await.unwrap();
+    let mut response = String::new();
+    stream.read_to_string(&mut response).await.unwrap();
+
+    let status = response
+        .split_whitespace()
+        .nth(1)
+        .and_then(|code| code.parse().ok())
+        .unwrap_or(0);
+    let body = response
+        .split_once("\r\n\r\n")
+        .map(|(_, body)| body.to_string())
+        .unwrap_or_default();
+    (status, body)
+}
+
+pub async fn http_body(url: &str) -> String {
+    http("GET", url, None).await.1
+}
+
+pub async fn http_status(url: &str) -> u16 {
+    http("GET", url, None).await.0
 }
 
 pub fn at(row: u16, col: u16) -> u16 {

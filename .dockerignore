@@ -1,5 +1,7 @@
 target
 node_modules
 web/node_modules
-web/dist
+web/build
+web/.svelte-kit
+web-old
 .git

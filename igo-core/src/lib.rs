@@ -5,5 +5,5 @@ pub mod sgf;
 pub mod zobrist;
 
 pub use board::{Board, Color, Group, Point, Vertex};
-pub use game::{Applied, Game, GameResult, Move, MoveError, Phase, DEFAULT_KOMI};
+pub use game::{handicap_points, Applied, Game, GameResult, Move, MoveError, Phase, DEFAULT_KOMI};
 pub use score::Score;

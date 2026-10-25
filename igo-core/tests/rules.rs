@@ -494,3 +494,32 @@ fn jigo_is_possible_with_integer_komi() {
     let result = g.finish_with_dead(&HashSet::new()).unwrap();
     assert_eq!(result.winner(), None);
 }
+
+#[test]
+fn handicap_stones_go_on_the_standard_points_and_white_moves_first() {
+    use igo_core::{handicap_points, sgf, Game, Point};
+
+    let at = |row: u16, col: u16| row * 19 + col;
+    assert_eq!(handicap_points(19, 2).unwrap(), vec![at(3, 15), at(15, 3)]);
+    assert_eq!(handicap_points(19, 5).unwrap().last(), Some(&at(9, 9)));
+    assert_eq!(handicap_points(19, 9).unwrap().len(), 9);
+    assert_eq!(
+        handicap_points(9, 4).unwrap()[3],
+        2 * 9 + 2,
+        "3-3 point on 9x9"
+    );
+    assert_eq!(handicap_points(19, 1), None);
+    assert_eq!(handicap_points(19, 10), None);
+    assert_eq!(handicap_points(12, 5), None, "no centre on an even board");
+
+    let game = Game::with_handicap(19, 0.5, 4).unwrap();
+    assert_eq!(game.to_play(), Color::White);
+    assert_eq!(game.board().get(at(3, 3)), Point::Stone(Color::Black));
+
+    let text = sgf::to_sgf(&game);
+    assert!(text.contains("HA[4]AB["), "{text}");
+    let (replayed, failure) = sgf::replay(&sgf::parse(&text).unwrap());
+    assert_eq!(failure, None);
+    assert_eq!(replayed.to_play(), Color::White);
+    assert_eq!(sgf::to_sgf(&replayed), text, "export is stable");
+}
