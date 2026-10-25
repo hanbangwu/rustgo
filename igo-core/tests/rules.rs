@@ -1,8 +1,3 @@
-//! Row 0 is the top line.
-//! `X` is black
-//! `O` is white
-//! `.` is empty
-
 use std::collections::HashSet;
 
 use igo_core::board::Point;
@@ -49,8 +44,6 @@ fn play(g: &mut Game, color: Color, row: u8, col: u8) -> Result<igo_core::Applie
         },
     )
 }
-
-// captures
 
 #[test]
 fn captures_a_single_stone() {
@@ -115,8 +108,6 @@ fn a_group_touched_twice_is_captured_once() {
     assert_eq!(g.captures(), [3, 0]);
 }
 
-// suicide
-
 #[test]
 fn suicide_is_rejected() {
     let mut g = game(
@@ -178,8 +169,6 @@ fn snapback() {
     assert_eq!(g.captures(), [11, 1]);
 }
 
-// ko
-
 const KO: &str = "
     .....
     .XO..
@@ -220,8 +209,6 @@ fn superko_compares_against_every_previous_position() {
 
     assert_eq!(play(&mut g, Color::Black, 2, 2), Err(MoveError::Superko));
 }
-
-// groups and edges
 
 #[test]
 fn corner_and_edge_liberties() {
@@ -270,8 +257,6 @@ fn shared_liberties_are_counted_once() {
         "(0,2), (1,1) and (2,0) — (1,1) counted once"
     );
 }
-
-// turn and flow
 
 #[test]
 fn players_must_alternate() {
@@ -348,8 +333,6 @@ fn resignation_ends_the_game() {
     assert!(g.is_finished());
     assert_eq!(play(&mut g, Color::White, 0, 0), Err(MoveError::NotPlaying));
 }
-
-// scoring
 
 #[test]
 fn area_score_counts_stones_and_territory() {

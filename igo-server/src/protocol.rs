@@ -1,4 +1,3 @@
-use axum::extract::ws::Message;
 use igo_core::{Applied, Color, Move, Phase, Score, Vertex, DEFAULT_KOMI};
 use serde::{Deserialize, Serialize};
 
@@ -12,7 +11,6 @@ pub struct Seats {
     pub white: Option<String>,
 }
 
-/// The rules a room is created with. They never change afterwards.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Settings {
     pub size: u8,
@@ -47,7 +45,13 @@ impl Settings {
     }
 }
 
-/// Body of `POST /api/rooms`. Komi defaults to 0.5 in handicap games.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RoomInfo {
+    pub id: String,
+    #[serde(flatten)]
+    pub settings: Settings,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct NewRoom {
     #[serde(default = "default_size")]
@@ -149,8 +153,8 @@ pub struct Snapshot {
     pub connections: usize,
 }
 
-impl From<ServerMsg> for Message {
-    fn from(msg: ServerMsg) -> Message {
-        Message::text(serde_json::to_string(&msg).expect("ServerMsg is always serializable"))
+impl ServerMsg {
+    pub fn to_json(&self) -> String {
+        serde_json::to_string(self).expect("ServerMsg is always serializable")
     }
 }

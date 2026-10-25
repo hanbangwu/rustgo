@@ -106,6 +106,9 @@ export class GameState {
 				this.rejection = msg.reason;
 				this.pending = null;
 				return true;
+
+			case 'heartbeat':
+				return true;
 		}
 	}
 

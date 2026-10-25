@@ -48,6 +48,7 @@ export type Snapshot = {
 
 export type ServerMsg =
 	| { type: 'identity'; conn: number; you: Color | null }
+	| { type: 'heartbeat' }
 	| ({ type: 'snapshot' } & Snapshot)
 	| {
 			type: 'moved';

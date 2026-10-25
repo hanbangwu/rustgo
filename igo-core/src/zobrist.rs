@@ -2,7 +2,7 @@ use crate::board::{Color, Vertex};
 
 const MAX_VERTICES: usize = 625;
 
-const SEED: u64 = 0x00_6967_6F5F_7632; // "igo_v2"
+const SEED: u64 = 0x00_6967_6F5F_7632;
 
 const fn splitmix64(state: u64) -> (u64, u64) {
     let state = state.wrapping_add(0x9E37_79B9_7F4A_7C15);

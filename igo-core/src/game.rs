@@ -77,7 +77,6 @@ impl Game {
         Game::from_board(Board::new(size), Color::Black, komi)
     }
 
-    /// A game with `stones` handicap stones on the standard points, white to move.
     pub fn with_handicap(size: u8, komi: f32, stones: u8) -> Option<Game> {
         let mut board = Board::new(size);
         let points = handicap_points(board.size(), stones)?;
@@ -130,7 +129,6 @@ impl Game {
         self.komi
     }
 
-    /// Stones on the board before the first move, indexed by colour.
     pub fn setup(&self) -> &[Vec<Vertex>; 2] {
         &self.setup
     }
@@ -267,8 +265,6 @@ impl Game {
     }
 }
 
-/// The standard handicap points for `stones` stones, or `None` if that
-/// handicap cannot be placed on this board. Zero stones is an even game.
 pub fn handicap_points(size: u8, stones: u8) -> Option<Vec<Vertex>> {
     if stones == 0 {
         return Some(Vec::new());
@@ -281,7 +277,6 @@ pub fn handicap_points(size: u8, stones: u8) -> Option<Vec<Vertex>> {
     let (near, mid, far) = (edge, size / 2, size - 1 - edge);
     let at = |row: u8, col: u8| row as Vertex * size as Vertex + col as Vertex;
 
-    // Upper right and lower left first, as seen by black.
     let mut points = vec![at(near, far), at(far, near)];
     if stones >= 3 {
         points.push(at(far, far));

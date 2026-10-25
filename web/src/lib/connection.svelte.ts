@@ -1,5 +1,4 @@
 import type { ClientMsg, ServerMsg } from './protocol.js';
-import { server } from './api-status.svelte.js';
 
 export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'desynchronized';
 
@@ -10,10 +9,9 @@ export type ConnectionOptions = {
 	reconnectInterval?: number;
 };
 
-// Well inside the 15 minutes without traffic after which Render puts a free server to sleep.
-const HEARTBEAT_INTERVAL = 4 * 60 * 1000;
+// Keeps idle connections open through proxies; the server answers without waking the room.
+const HEARTBEAT_INTERVAL = 30 * 1000;
 const MAX_RECONNECT_DELAY = 10 * 1000;
-const WAKING_AFTER = 3 * 1000;
 
 export class Connection {
 	status = $state<ConnectionStatus>('connecting');
@@ -25,7 +23,6 @@ export class Connection {
 	#attempts = 0;
 	#recentFailures = 0;
 	#retryId?: number;
-	#wakingId?: number;
 	#heartbeatId: number;
 	#resetFailuresId: number;
 	#disposed = false;
@@ -54,10 +51,8 @@ export class Connection {
 	dispose(): void {
 		this.#disposed = true;
 		window.clearTimeout(this.#retryId);
-		window.clearTimeout(this.#wakingId);
 		window.clearInterval(this.#heartbeatId);
 		window.clearInterval(this.#resetFailuresId);
-		server.socketDown = false;
 		const ws = this.#ws;
 		this.#ws = undefined;
 		ws?.close();
@@ -66,7 +61,6 @@ export class Connection {
 	#tryConnect(): void {
 		if (this.#disposed || this.#connecting || this.#ws) return;
 		this.#connecting = true;
-		this.#wakingId ??= window.setTimeout(() => (server.socketDown = true), WAKING_AFTER);
 
 		const ws = new WebSocket(this.#options.url);
 
@@ -74,9 +68,6 @@ export class Connection {
 			this.#connecting = false;
 			this.#ws = ws;
 			this.#attempts = 0;
-			window.clearTimeout(this.#wakingId);
-			this.#wakingId = undefined;
-			server.socketDown = false;
 			this.status = 'connected';
 			this.#options.onOpen();
 		};
@@ -105,7 +96,7 @@ export class Connection {
 		};
 	}
 
-	/** Backs off while the server is unreachable, e.g. while a free host wakes it up. */
+	/** Backs off while the server is unreachable. */
 	#scheduleRetry(): void {
 		if (this.#disposed) return;
 		window.clearTimeout(this.#retryId);

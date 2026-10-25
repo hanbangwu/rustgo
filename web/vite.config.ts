@@ -13,13 +13,13 @@ export default defineConfig({
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
 
-			// A single-page app: the igo server serves `build/` and falls back to index.html.
+			// A single-page app: Vercel serves `build/` and falls back to index.html.
 			adapter: adapter({ fallback: 'index.html' })
 		})
 	],
 	server: {
 		proxy: {
-			'/api': { target: 'http://127.0.0.1:3030', changeOrigin: true, ws: true }
+			'/api': { target: 'http://127.0.0.1:8787', changeOrigin: true, ws: true }
 		}
 	}
 });
