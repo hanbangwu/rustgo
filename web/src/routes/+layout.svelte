@@ -10,7 +10,7 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<title>igo</title>
+	<title>RustGo</title>
 </svelte:head>
 
 <ModeWatcher />

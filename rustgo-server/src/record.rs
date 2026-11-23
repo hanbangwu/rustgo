@@ -1,4 +1,4 @@
-use igo_core::{Color, Move, Vertex};
+use rustgo_core::{Color, Move, Vertex};
 use serde::{Deserialize, Serialize};
 
 use crate::protocol::Settings;

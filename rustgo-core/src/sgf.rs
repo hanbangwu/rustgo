@@ -49,7 +49,7 @@ pub fn to_sgf(game: &Game) -> String {
     let board = game.board();
     let size = board.size();
 
-    let mut out = String::from("(;GM[1]FF[4]CA[UTF-8]AP[igo:0.1.0]RU[Chinese]");
+    let mut out = String::from("(;GM[1]FF[4]CA[UTF-8]AP[rustgo:0.1.0]RU[Chinese]");
     out.push_str(&format!("SZ[{}]KM[{}]", size, game.komi()));
 
     if let Phase::Finished { result } = game.phase() {

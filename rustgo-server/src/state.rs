@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use anyhow::{anyhow, bail, Context, Result};
-use igo_core::{Color, Game, Phase, Vertex};
+use rustgo_core::{Color, Game, Phase, Vertex};
 
 use crate::protocol::{ClientMsg, PlayerToken, Seats, ServerMsg, Settings, Snapshot};
 use crate::record::{Event, Saved, SeatRecord, Table};
@@ -94,7 +94,7 @@ impl RoomState {
     }
 
     pub fn sgf(&self) -> String {
-        igo_core::sgf::to_sgf(&self.game)
+        rustgo_core::sgf::to_sgf(&self.game)
     }
 
     pub fn table(&self) -> Table {
@@ -155,7 +155,7 @@ impl RoomState {
             vertices: self.dead_sorted(),
             accepted: self.accepted_sorted(),
             score: self.game.provisional_score(&self.dead),
-            territory: igo_core::score::ownership(self.game.board(), &self.dead),
+            territory: rustgo_core::score::ownership(self.game.board(), &self.dead),
         }
     }
 

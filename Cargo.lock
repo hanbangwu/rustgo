@@ -278,27 +278,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "igo-core"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "thiserror",
-]
-
-[[package]]
-name = "igo-server"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "getrandom",
- "igo-core",
- "serde",
- "serde_json",
- "worker",
-]
-
-[[package]]
 name = "itoa"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -418,6 +397,27 @@ name = "r-efi"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
+
+[[package]]
+name = "rustgo-core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
+name = "rustgo-server"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "getrandom",
+ "rustgo-core",
+ "serde",
+ "serde_json",
+ "worker",
+]
 
 [[package]]
 name = "rustversion"

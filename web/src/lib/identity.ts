@@ -1,7 +1,7 @@
 import type { Room, Settings } from './protocol.js';
 
-const TOKEN_KEY = 'igo:player-token';
-const NAME_KEY = 'igo:player-name';
+const TOKEN_KEY = 'rustgo:player-token';
+const NAME_KEY = 'rustgo:player-name';
 
 export function playerToken(): string {
 	let token = localStorage.getItem(TOKEN_KEY);

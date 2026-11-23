@@ -1,5 +1,5 @@
-use igo_core::sgf::{self, SgfGame};
-use igo_core::{Color, Game, Move, DEFAULT_KOMI};
+use rustgo_core::sgf::{self, SgfGame};
+use rustgo_core::{Color, Game, Move, DEFAULT_KOMI};
 
 fn at(size: u8, row: u8, col: u8) -> u16 {
     row as u16 * size as u16 + col as u16
@@ -215,5 +215,5 @@ fn replay_reports_the_move_that_broke_the_rules() {
         ],
     };
     let (_, failure) = sgf::replay(&record);
-    assert_eq!(failure, Some((1, igo_core::MoveError::Occupied)));
+    assert_eq!(failure, Some((1, rustgo_core::MoveError::Occupied)));
 }

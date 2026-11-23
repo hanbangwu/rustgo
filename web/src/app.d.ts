@@ -10,7 +10,7 @@ declare global {
 	}
 
 	interface ImportMetaEnv {
-		/** Origin of the igo server, when it is not the one serving this page. */
+		/** Origin of the RustGo server, when it is not the one serving this page. */
 		readonly VITE_API_URL?: string;
 	}
 }

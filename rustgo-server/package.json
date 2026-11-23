@@ -1,5 +1,5 @@
 {
-	"name": "igo-server",
+	"name": "rustgo-server",
 	"private": true,
 	"scripts": {
 		"dev": "wrangler dev",

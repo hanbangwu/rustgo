@@ -1,4 +1,4 @@
-use igo_core::{Applied, Color, Move, Phase, Score, Vertex, DEFAULT_KOMI};
+use rustgo_core::{Applied, Color, Move, Phase, Score, Vertex, DEFAULT_KOMI};
 use serde::{Deserialize, Serialize};
 
 pub type ConnId = u64;
@@ -38,7 +38,7 @@ impl Settings {
         if !self.komi.is_finite() || self.komi.abs() > 100.0 || (self.komi * 2.0).fract() != 0.0 {
             return Err("komi must be a multiple of 0.5 between -100 and 100");
         }
-        if igo_core::handicap_points(self.size, self.handicap).is_none() {
+        if rustgo_core::handicap_points(self.size, self.handicap).is_none() {
             return Err("handicap must be 0 or between 2 and 9 stones");
         }
         Ok(())

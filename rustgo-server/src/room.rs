@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use crate::protocol::{ClientMsg, ConnId, PlayerToken, RoomInfo, ServerMsg, Settings};
 use crate::record::{Event, Saved, Table};
 use crate::state::{parse_hello, Outcome, RoomState};
-use igo_core::Color;
+use rustgo_core::Color;
 use serde::{Deserialize, Serialize};
 use worker::*;
 

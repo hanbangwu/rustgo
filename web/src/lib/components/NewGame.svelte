@@ -48,7 +48,7 @@
 </script>
 
 <main class="mx-auto flex max-w-md flex-col gap-4 px-4 py-12">
-	<h1 class="text-2xl font-semibold tracking-wide">igo</h1>
+	<h1 class="text-2xl font-semibold tracking-wide">RustGo</h1>
 
 	{#if missing}
 		<Alert.Root>

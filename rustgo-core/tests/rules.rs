@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
-use igo_core::board::Point;
-use igo_core::{Board, Color, Game, Move, MoveError, Vertex, DEFAULT_KOMI};
+use rustgo_core::board::Point;
+use rustgo_core::{Board, Color, Game, Move, MoveError, Vertex, DEFAULT_KOMI};
 
 fn board(size: u8, diagram: &str) -> Board {
     let mut b = Board::new(size);
@@ -35,7 +35,7 @@ fn at(size: u8, row: u8, col: u8) -> Vertex {
     row as Vertex * size as Vertex + col as Vertex
 }
 
-fn play(g: &mut Game, color: Color, row: u8, col: u8) -> Result<igo_core::Applied, MoveError> {
+fn play(g: &mut Game, color: Color, row: u8, col: u8) -> Result<rustgo_core::Applied, MoveError> {
     let size = g.board().size();
     g.play(
         color,
@@ -286,11 +286,11 @@ fn two_passes_enter_scoring() {
     g.play(Color::Black, Move::Pass).unwrap();
     assert_eq!(
         g.phase(),
-        &igo_core::Phase::Playing,
+        &rustgo_core::Phase::Playing,
         "one pass is not enough"
     );
     g.play(Color::White, Move::Pass).unwrap();
-    assert_eq!(g.phase(), &igo_core::Phase::Scoring);
+    assert_eq!(g.phase(), &rustgo_core::Phase::Scoring);
 
     assert_eq!(play(&mut g, Color::Black, 0, 0), Err(MoveError::NotPlaying));
 }
@@ -303,7 +303,7 @@ fn a_move_between_passes_resets_the_count() {
     g.play(Color::Black, Move::Pass).unwrap();
     assert_eq!(
         g.phase(),
-        &igo_core::Phase::Playing,
+        &rustgo_core::Phase::Playing,
         "passes were not consecutive"
     );
 }
@@ -314,7 +314,7 @@ fn resuming_play_leaves_the_scoring_phase() {
     g.play(Color::Black, Move::Pass).unwrap();
     g.play(Color::White, Move::Pass).unwrap();
     g.resume_play().expect("players disagreed on dead stones");
-    assert_eq!(g.phase(), &igo_core::Phase::Playing);
+    assert_eq!(g.phase(), &rustgo_core::Phase::Playing);
     play(&mut g, Color::Black, 4, 4).expect("play continues");
 }
 
@@ -324,8 +324,8 @@ fn resignation_ends_the_game() {
     g.play(Color::Black, Move::Resign).unwrap();
     assert_eq!(
         g.phase(),
-        &igo_core::Phase::Finished {
-            result: igo_core::GameResult::Resignation {
+        &rustgo_core::Phase::Finished {
+            result: rustgo_core::GameResult::Resignation {
                 winner: Color::White
             }
         }
@@ -480,7 +480,7 @@ fn jigo_is_possible_with_integer_komi() {
 
 #[test]
 fn handicap_stones_go_on_the_standard_points_and_white_moves_first() {
-    use igo_core::{handicap_points, sgf, Game, Point};
+    use rustgo_core::{handicap_points, sgf, Game, Point};
 
     let at = |row: u16, col: u16| row * 19 + col;
     assert_eq!(handicap_points(19, 2).unwrap(), vec![at(3, 15), at(15, 3)]);

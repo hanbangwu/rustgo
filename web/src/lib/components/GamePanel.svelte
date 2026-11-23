@@ -68,7 +68,7 @@
 
 <aside class="flex w-full flex-col gap-4 lg:w-80 lg:shrink-0">
 	<header class="flex items-center justify-between gap-2">
-		<a href={resolve('/')} class="text-xl font-semibold tracking-wide">igo</a>
+		<a href={resolve('/')} class="text-xl font-semibold tracking-wide">RustGo</a>
 		<div class="flex items-center gap-2">
 			<Badge variant={status === 'connected' ? 'secondary' : 'outline'}>
 				{status}{#if game.connections > 0}&nbsp;· {game.connections} here{/if}

@@ -1,14 +1,14 @@
-name = "igo"
+name = "rustgo"
 main = "build/index.js"
 compatibility_date = "2026-10-01"
 
 [build]
 command = "worker-build --release"
 
-# The frontend's origin, e.g. https://igo.vercel.app; comma-separate several.
+# The frontend's origin, e.g. https://rustgo.xyz; comma-separate several.
 # Unset, browsers on other sites cannot call the API.
 [vars]
-ALLOWED_ORIGINS = "https://igo1.vercel.app"
+ALLOWED_ORIGINS = "https://rustgo.xyz"
 
 [[durable_objects.bindings]]
 name = "ROOMS"
