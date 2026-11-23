@@ -14,9 +14,9 @@ Board size, komi and handicap are chosen per game when it is created.
 
 ```sh
 rustup target add wasm32-unknown-unknown
-cargo install worker-build --version 0.8.7
+cargo install worker-build
 cd rustgo-server && bun install && bun run dev  # backend on 8787
-cd web && bun install && bun run dev         # frontend on 5173
+cd web && bun install && bun run dev            # frontend on 5173
 ```
 
 ## Configuration
