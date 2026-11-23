@@ -5,16 +5,13 @@ compatibility_date = "2026-10-01"
 [build]
 command = "worker-build --release"
 
-# The frontend's origin, e.g. https://rustgo.xyz; comma-separate several.
-# Unset, browsers on other sites cannot call the API.
 [vars]
-ALLOWED_ORIGINS = "https://rustgo.xyz"
+ALLOWED_ORIGINS = "https://www.rustgo.xyz"
 
 [[durable_objects.bindings]]
 name = "ROOMS"
 class_name = "Room"
 
-# The free plan only offers SQLite-backed Durable Objects.
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Room"]
